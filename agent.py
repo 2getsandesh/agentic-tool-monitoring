@@ -1,15 +1,21 @@
 import asyncio
+import os
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 
 from traceloop.sdk import Traceloop
 from traceloop.sdk.decorators import workflow
-Traceloop.init(app_name="Agent", api_endpoint="localhost:4317")
 
-model = ChatOpenAI(model="meta-llama/llama-3-3-70b-instruct")
+load_dotenv()
+Traceloop.init(app_name="Weather-Agent", api_endpoint=os.getenv("TRACELOOP_BASE_URL"))
+
+# Read Groq configuration from environment so models/keys can be changed without code edits.
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+model = ChatGroq(model=GROQ_MODEL, groq_api_key=os.getenv("GROQ_API_KEY"))
 prompt = "You are a helpful assistant capable of getting weather forecast and weather alerts. You are provided with state or co-ordinates. Call relavant tools to complete the input task and return summarised response"
 mcp_server_url = "http://0.0.0.0:8000/sse"
 
