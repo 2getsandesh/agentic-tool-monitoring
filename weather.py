@@ -1,11 +1,15 @@
 import httpx
 import json
+import os
 from mcp.types import TextContent
 from mcp.server.fastmcp import FastMCP
 
 from traceloop.sdk import Traceloop
 from traceloop.sdk.decorators import workflow
-Traceloop.init(app_name="Weather-MCP-Server", api_endpoint="localhost:4317")
+from dotenv import load_dotenv
+load_dotenv()
+Traceloop.init(app_name="Weather-MCP-Server", api_endpoint=os.getenv("TRACELOOP_BASE_URL"))
+
 
 mcp = FastMCP("Weather")
 NWS_API_BASE = "https://api.weather.gov"

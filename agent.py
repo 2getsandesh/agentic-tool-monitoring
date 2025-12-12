@@ -1,16 +1,46 @@
 import asyncio
+import os
+import random
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 
 from traceloop.sdk import Traceloop
 from traceloop.sdk.decorators import workflow
-Traceloop.init(app_name="Agent", api_endpoint="localhost:4317")
 
-model = ChatOpenAI(model="meta-llama/llama-3-3-70b-instruct")
-prompt = "You are a helpful assistant capable of getting weather forecast and weather alerts. You are provided with state or co-ordinates. Call relavant tools to complete the input task and return summarised response"
+from ibm_watsonx_ai.metanames import GenTextParamsMetaNames
+from ibm_watsonx_ai.foundation_models import ModelInference
+from langchain_ibm import ChatWatsonx
+
+load_dotenv()
+Traceloop.init(app_name="Weather-Agent", api_endpoint=os.getenv("TRACELOOP_BASE_URL"))
+
+def watsonx_llm_init():
+    watsonx_llm_parameters = {
+        GenTextParamsMetaNames.DECODING_METHOD: "sample",
+        GenTextParamsMetaNames.MAX_NEW_TOKENS: 100,
+        GenTextParamsMetaNames.MIN_NEW_TOKENS: 1,
+        GenTextParamsMetaNames.TEMPERATURE: 0.5,
+        GenTextParamsMetaNames.TOP_K: 50,
+        GenTextParamsMetaNames.TOP_P: 1,
+    }
+    models = ['ibm/granite-3-3-8b-instruct']
+    model_id = random.choice(models)
+    watsonx_chat = ChatWatsonx(
+        model_id=model_id,
+        url=os.getenv("WATSONX_URL"),
+        apikey=os.getenv("WATSONX_API_KEY"),
+        project_id=os.getenv("WATSONX_PROJECT_ID"),
+        params=watsonx_llm_parameters,
+    )
+    return watsonx_chat
+
+# Initialize WatsonX model
+model = watsonx_llm_init()
+
+prompt = "Get weather data using tools. Return one-line summary only."
 mcp_server_url = "http://0.0.0.0:8000/sse"
 
 class MCPClient:
