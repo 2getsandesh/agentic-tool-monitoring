@@ -4,11 +4,11 @@ import random
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from langchain_mcp_adapters.tools import load_mcp_tools
-from langgraph.prebuilt import create_react_agent
+from langgraph.prebuilt.chat_agent_executor import create_react_agent
 from dotenv import load_dotenv
 
 from traceloop.sdk import Traceloop
-from traceloop.sdk.decorators import workflow
+from traceloop.sdk.decorators import workflow, tool
 
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames
 from ibm_watsonx_ai.foundation_models import ModelInference
@@ -82,9 +82,99 @@ async def run_agent():
     response = await agent.ainvoke(inputs)
     
     print_stream(response)
+    
+    # # Test various error scenarios
+    # print("\n" + "="*50)
+    # print("Testing Error Tools:")
+    # print("="*50)
+    
+    # # Test 1: Division by zero
+    # print("\n1. Testing Division by Zero Error:")
+    # try:
+    #     error_tool_division()
+    # except Exception as e:
+    #     print(f"   ✗ Caught error: {type(e).__name__}: {e}")
+    
+    # # Test 2: KeyError
+    # print("\n2. Testing KeyError:")
+    # try:
+    #     error_tool_key()
+    # except Exception as e:
+    #     print(f"   ✗ Caught error: {type(e).__name__}: {e}")
+    
+    # # Test 3: TypeError
+    # print("\n3. Testing TypeError:")
+    # try:
+    #     error_tool_type()
+    # except Exception as e:
+    #     print(f"   ✗ Caught error: {type(e).__name__}: {e}")
+    
+    # # Test 4: ValueError
+    # print("\n4. Testing ValueError:")
+    # try:
+    #     error_tool_value()
+    # except Exception as e:
+    #     print(f"   ✗ Caught error: {type(e).__name__}: {e}")
+    
+    # # Test 5: Custom Exception
+    # print("\n5. Testing Custom Exception:")
+    # try:
+    #     error_tool_custom()
+    # except Exception as e:
+    #     print(f"   ✗ Caught error: {type(e).__name__}: {e}")
+    
+    # # Test 6: Successful tool call (multiple times for observability)
+    # print("\n6. Testing Successful Tool Call (Multiple Times):")
+
+    # try:
+    #     result = hello_tool()
+    #     print(f"   ✓ Call: {result}")
+    # except Exception as e:
+    #     print(f"   ✗ Call - Caught error: {type(e).__name__}: {e}")
+
+    # print("\n" + "="*50)
+    # print("Error Testing Complete")
+    # print("="*50 + "\n")
+    
     await mcp_server.cleanup()
 
+# @tool(name="hello_tool")
+# def hello_tool():
+#     """A simple tool that returns a greeting"""
+#     return "Hello from hello_tool"
+
+# @tool(name="error_tool_division_by_zero")
+# def error_tool_division():
+#     """Tool that intentionally causes a division by zero error"""
+#     result = 10 / 0  # This will raise ZeroDivisionError
+#     return result
+
+# @tool(name="error_tool_key_error")
+# def error_tool_key():
+#     """Tool that intentionally causes a KeyError"""
+#     data = {"name": "test"}
+#     return data["nonexistent_key"]  # This will raise KeyError
+
+# @tool(name="error_tool_type_error")
+# def error_tool_type():
+#     """Tool that intentionally causes a TypeError"""
+#     result = "string" + 123  # This will raise TypeError
+#     return result
+
+# @tool(name="error_tool_value_error")
+# def error_tool_value():
+#     """Tool that intentionally causes a ValueError"""
+#     number = int("not_a_number")  # This will raise ValueError
+#     return number
+
+# @tool(name="error_tool_custom_exception")
+# def error_tool_custom():
+#     """Tool that raises a custom exception"""
+#     raise Exception("This is a custom error for testing purposes")
+
+@tool(name="print_stream_agent_tool")
 def print_stream(stream):
+    """Print the agent's response stream"""
     for message in stream['messages']:
         if isinstance(message, tuple):
             print(message)
